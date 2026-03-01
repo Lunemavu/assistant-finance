@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Assistant Finance</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background-color: #eaea24; }
+        h1 { color: #2c3e50; text-align: center; }
+        #zone-regles { background: white; border-radius: 10px; padding: 15px; margin-bottom: 20px; border: 1px solid #ddd; display: flex; gap: 10px; align-items: center; }
+        #statut { font-size: 14px; color: #27ae60; }
+        #chat { background: white; border-radius: 10px; padding: 20px; height: 400px; overflow-y: scroll; margin-bottom: 20px; border: 1px solid #ddd; }
+        .message-user { text-align: right; margin: 10px 0; }
+        .message-user span { background: #3498db; color: white; padding: 8px 15px; border-radius: 15px; display: inline-block; max-width: 70%; }
+        .message-claude { text-align: left; margin: 10px 0; }
+        .message-claude span { background: #ecf0f1; color: #2c3e50; padding: 8px 15px; border-radius: 15px; display: inline-block; max-width: 70%; white-space: pre-wrap; }
+        #input-zone { display: flex; gap: 10px; }
+        #question { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; }
+        button { padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #2980b9; }
+        label#btn-fichier { padding: 10px 20px; background: #27ae60; color: white; border-radius: 8px; cursor: pointer; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h1>💰 Assistant Finance</h1>
+    <div id="zone-regles">
+        <label id="btn-fichier" for="fichier-input">📂 Choisir un fichier</label>
+        <input type="file" id="fichier-input" accept=".txt" style="display:none" />
+        <span id="statut">Aucun fichier chargé</span>
+    </div>
+    <div id="chat"></div>
+    <div id="input-zone">
+        <input type="text" id="question" placeholder="Pose ta question..." />
+        <button id="btn-envoyer">Envoyer</button>
+    </div>
+
+    <script>
+        let contenuFichier = "";
+
+        document.getElementById("fichier-input").addEventListener("change", function() {
+            const fichier = this.files[0];
+            if (!fichier) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                contenuFichier = e.target.result;
+                document.getElementById("statut").textContent = "✅ " + fichier.name + " chargé !";
+            };
+            reader.readAsText(fichier);
+        });
+
+        document.getElementById("btn-envoyer").addEventListener("click", envoyer);
+
+        document.getElementById("question").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") envoyer();
+        });
+
+        function envoyer() {
+            const question = document.getElementById("question").value;
+            if (!question) return;
+
+            const chat = document.getElementById("chat");
+            chat.innerHTML += '<div class="message-user"><span>' + question + '</span></div>';
+            document.getElementById("question").value = "";
+
+            const messageComplet = contenuFichier
+                ? "Voici les règles :\n\n" + contenuFichier + "\n\nQuestion : " + question
+                : question;
+
+            fetch("/chat", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({message: messageComplet})
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                chat.innerHTML += '<div class="message-claude"><span>' + data.reponse + '</span></div>';
+                chat.scrollTop = chat.scrollHeight;
+            });
+        }
+    </script>
+</body>
+</html>

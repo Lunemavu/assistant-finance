@@ -1,0 +1,3 @@
+Règle 1 : Si le client a moins de 18 ans, refuser le produit.
+Règle 2 : Si le montant dépasse 100 000€, demander une validation manuelle.
+Règle 3 : Si le ratio UCITS dépasse 10%, bloquer la transaction.
